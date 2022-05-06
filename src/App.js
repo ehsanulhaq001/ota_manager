@@ -370,8 +370,10 @@ function App({ setUserAuthorized }) {
             GET
           </div>
           <button
+            style={{
+              border: "none",
+            }}
             disabled
-            alt="Disabled"
             className={`method post ${method === "POST" && "sel"}`}
             onClick={() => handle_method_change("POST")}
           >
@@ -428,6 +430,7 @@ function App({ setUserAuthorized }) {
           {responseTime !== "" && (
             <div className="response time">{responseTime}</div>
           )}
+
           <pre>{jsonResponse}</pre>
         </div>
         <div className="sec sec4">

@@ -9,8 +9,7 @@ export default function Login() {
       <h1>OTA MANAGER</h1>
       <div className="loginHolder">
         <div>
-          {/* <span>Login</span> */}
-          <a href="https://e-ota.auth.us-west-2.amazoncognito.com/login?client_id=4ueocual9gabq8imtgrch5c6vd&response_type=token&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=http://localhost:3000">
+          <a href="https://e-ota.auth.us-west-2.amazoncognito.com/login?client_id=4ueocual9gabq8imtgrch5c6vd&response_type=token&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=http://localhost:3000/">
             <img src={loginLogo} alt="Login Logo" />
           </a>
         </div>

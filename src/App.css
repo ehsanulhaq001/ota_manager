@@ -109,25 +109,29 @@
     margin: 10px;
     right: 0;
     font-size: calc(var(--f0)*1);
-    width: 200px;
     background-color: #2a303c;
     border-radius: 10px;
     padding: 5px;
 }
 
 .App-header .userEmail {
-    width: 100%;
     overflow: hidden;
     float: left;
     transition: width 0.3s;
+    padding: 0px 10px;
+    border-radius: 10px;
 }
 
 .App-header .logout {
+    position: absolute;
+    left: 0;
     width: 0;
     overflow: hidden;
     float: left;
     transition: width 0.3s;
-    color: var(--text3)
+    color: var(--text3);
+    background-color: #2a303c;
+    border-radius: 10px;
 }
 
 .App-header .userEmailHolder:hover {
@@ -135,16 +139,17 @@
     cursor: pointer;
 }
 
-.App-header .userEmailHolder:hover .userEmail {
+
+/* .App-header .userEmailHolder:hover .userEmail {
     width: 0;
-}
+} */
 
 .App-header .userEmailHolder:hover .logout {
     width: 100%;
 }
 
 
-/* 
+/*
 .App-header .userEmail:hover:before {
     width: 100%;
     content: attr(data-logout);

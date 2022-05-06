@@ -7,6 +7,7 @@ import axios from "axios";
 
 import AWS from "aws-sdk";
 // import loginLogo from "./loginLogo.svg";
+import refreshIcon from "./refreshIcon.svg";
 
 AWS.config.update({ region: "us-west-2" });
 
@@ -24,7 +25,7 @@ function App({ setUserAuthorized }) {
           ends: [""],
         },
         {
-          base: "api/management/v1/deployments/artifacts/list",
+          base: "api/management/v1/deployments/deployments/releases/list",
           ends: [""],
         },
         {
@@ -45,7 +46,7 @@ function App({ setUserAuthorized }) {
       method: "POST",
       baseUrls: [
         {
-          base: "api/management/v1/deployments/artifacts",
+          base: "api/management/v1/deployments/deployments",
           ends: [""],
         },
       ],
@@ -71,6 +72,7 @@ function App({ setUserAuthorized }) {
   const [selectedFile, setSelectedFile] = useState();
   const [isFilePicked, setIsFilePicked] = useState(false);
   const [menderFileName, setMenderFileName] = useState("");
+  const [sendOrMore, setSendOrMore] = useState("SEND");
 
   const changeHandler = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -85,12 +87,13 @@ function App({ setUserAuthorized }) {
     return res;
   };
 
-  const [uploaded, setUploaded] = useState(true);
+  const [uploaded1, setUploaded1] = useState(true);
+  const [uploaded2, setUploaded2] = useState(true);
 
   const handle_upload_to_s3 = async (e) => {
     e.preventDefault();
     if (!selectedFile) return;
-    setUploaded(false);
+    setUploaded1(false);
 
     let s3 = new AWS.S3(await getS3Credentials());
 
@@ -101,8 +104,8 @@ function App({ setUserAuthorized }) {
     };
 
     s3.putObject(params, (err) => {
-      if (err) setUploaded(false);
-      else setUploaded(true);
+      if (err) setUploaded1(false);
+      else setUploaded1(true);
     });
     setMenderFileName(selectedFile.name);
   };
@@ -113,11 +116,29 @@ function App({ setUserAuthorized }) {
 
   const handle_upload_to_mender = async (e) => {
     e.preventDefault();
-    setUploaded(false);
+    setUploaded1(false);
     await getResponse("01&artifact_name=" + menderFileName).then((data) => {
       setJsonResponse(JSON.stringify(data, null, 4));
     });
-    setUploaded(true);
+    setUploaded1(true);
+  };
+
+  const handle_deploy_to_mender = async (e) => {
+    e.preventDefault();
+    setUploaded1(false);
+
+    await getResponse(
+      "02",
+      "&deployment_name=" +
+        deployName +
+        "&artifact_name_to_deploy=" +
+        deployArt +
+        "&group_to_deploy_to=" +
+        deployGrp
+    ).then((data) => {
+      setJsonResponse(JSON.stringify(data, null, 4));
+    });
+    setUploaded1(true);
   };
 
   useEffect(() => {
@@ -143,6 +164,8 @@ function App({ setUserAuthorized }) {
   }, [endUrls]);
 
   const handle_method_change = (method) => {
+    if (method === "GET") setSendOrMore("SEND");
+    else setSendOrMore("MORE");
     setMethod(method);
   };
   const handle_base_url_change = (event) => {
@@ -151,10 +174,9 @@ function App({ setUserAuthorized }) {
   const handle_end_url_change = (event) => {
     setEndUrl(event.value);
   };
-
   const handle_send = async () => {
+    // let start = new Date().getTime();
     setLoaded(false);
-    let start = new Date().getTime();
 
     const request = `${baseUrl}${endUrl}`;
     console.log(`${method} ${baseUrl}${endUrl}`);
@@ -166,7 +188,7 @@ function App({ setUserAuthorized }) {
             setJsonResponse(JSON.stringify(data, null, 4));
           });
           break;
-        case "api/management/v1/deployments/artifacts/list":
+        case "api/management/v1/deployments/deployments/releases/list":
           await getResponse("2").then((data) => {
             setJsonResponse(JSON.stringify(data, null, 4));
           });
@@ -183,7 +205,15 @@ function App({ setUserAuthorized }) {
           break;
         case "api/management/v1/inventory/devices":
           await getResponse("5").then((data) => {
-            setJsonResponse(JSON.stringify(data, null, 4));
+            let devices = [];
+            data = data.list_devices;
+            data.forEach((device) => {
+              devices.push(
+                device.attributes.find((attribute) => attribute.name === "mac")
+                  .value
+              );
+            });
+            setJsonResponse(JSON.stringify(devices, null, 4));
           });
           break;
         case "api/management/v1/deployments/deployments/all":
@@ -209,8 +239,16 @@ function App({ setUserAuthorized }) {
       }
     } else if (method === "POST") {
       switch (request) {
-        case "api/management/v1/deployments/artifacts":
-          await getResponse("01").then((data) => {
+        case "api/management/v1/deployments/deployments":
+          await getResponse(
+            "02",
+            "&deployment_name=" +
+              "test" +
+              "&artifact_name_to_deploy=" +
+              "test" +
+              "&devices_to_deploy_to=" +
+              "test"
+          ).then((data) => {
             setJsonResponse(JSON.stringify(data, null, 4));
           });
           break;
@@ -221,13 +259,14 @@ function App({ setUserAuthorized }) {
           break;
       }
     }
-    let end = new Date().getTime();
-    setResponseDuration(end - start);
-    setResponseTime(new Date().toLocaleTimeString());
+    // let end = new Date().getTime();
+    // setResponseDuration(end - start);
+    // setResponseTime(new Date().toLocaleTimeString());
     setLoaded(true);
   };
 
-  const getResponse = async (cmd) => {
+  const getResponse = async (cmd, args = "") => {
+    let start = new Date().getTime();
     if (!checkToken()) {
       localStorage.clear();
       setUserAuthorized(false);
@@ -241,49 +280,19 @@ function App({ setUserAuthorized }) {
       "https://egyek8hnrb.execute-api.us-west-2.amazonaws.com/e_mender";
     try {
       await axios
-        .get(url + "?cmd=" + cmd, {
+        .get(url + "?cmd=" + cmd + args, {
           headers: headers,
         })
         .then((res) => (response = res.data));
     } catch (error) {
       response = error.message;
     }
+    let end = new Date().getTime();
+
+    setResponseDuration(end - start);
+    setResponseTime(new Date().toLocaleTimeString());
     return response;
   };
-
-  // const postResponse = async (cmd) => {
-  //   let response;
-  //   const inputBody = `{
-  //     "name": "string",
-  //     "description": "string",
-  //     "device_types_compatible": [
-  //       "string"
-  //     ],
-  //     "type": "single_file",
-  //     "args": "string",
-  //     "file": "string"
-  //   }`;
-  //   const headers = {
-  //     "Content-Type": "multipart/form-data",
-  //     Accept: "application/json",
-  //     Authorization: "Bearer {access-token}",
-  //   };
-
-  //   fetch(
-  //     "https://hosted.mender.io/api/management/v1/deployments/artifacts/generate",
-  //     {
-  //       method: "POST",
-  //       body: inputBody,
-  //       headers: headers,
-  //     }
-  //   )
-  //     .then(function (res) {
-  //       return res.json();
-  //     })
-  //     .then(function (body) {
-  //       console.log(body);
-  //     });
-  // };
 
   const inputRef = useRef(null);
   const handle_input_button_click = () => {
@@ -291,6 +300,45 @@ function App({ setUserAuthorized }) {
   };
 
   const [showFileDetails, setShowFileDetails] = useState(false);
+  const [artList, setArtList] = useState();
+  const [deployArt, setDeployArt] = useState("");
+  const [deployName, setDeployName] = useState("");
+  const [showArtDetails, setShowArtDetails] = useState(false);
+  useEffect(() => {
+    setUploaded2(false);
+    (async () => {
+      setUploaded2(false);
+
+      let arts = [];
+      await getResponse("2").then((res) => {
+        res.list_releases.map((rs) => arts.push(rs.Name));
+      });
+      setArtList(arts);
+      setUploaded2(true);
+    })();
+  }, [showArtDetails]);
+
+  useEffect(() => {
+    if (artList && artList[0]) setDeployArt(artList[0]);
+  }, [artList]);
+
+  const [groupList, setGroupList] = useState();
+  const [deployGrp, setDeployGrp] = useState("");
+  useEffect(() => {
+    (async () => {
+      let grps = [];
+
+      await getResponse("9").then((res) => {
+        res.listDeviceGroups.map((rs) => grps.push(rs));
+      });
+
+      setGroupList(grps);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (groupList && groupList[0]) setDeployGrp(groupList[0]);
+  }, [groupList]);
 
   return (
     <div className="App dark">
@@ -321,12 +369,19 @@ function App({ setUserAuthorized }) {
           >
             GET
           </div>
-          <div
+          <button
+            disabled
+            alt="Disabled"
             className={`method post ${method === "POST" && "sel"}`}
             onClick={() => handle_method_change("POST")}
           >
-            POST
-          </div>
+            <span style={{ color: "grey" }} className="main_text">
+              POST
+            </span>
+            <div style={{ color: "grey" }} id="hover-content">
+              Disabled
+            </div>
+          </button>
         </div>
         <div className="sec sec2">
           <div className="urls">
@@ -359,7 +414,7 @@ function App({ setUserAuthorized }) {
               </div>
             )}
             <button className="send" onClick={handle_send}>
-              SEND
+              {sendOrMore}
             </button>
           </div>
           {!loaded && <div className="loader-line"></div>}
@@ -379,11 +434,11 @@ function App({ setUserAuthorized }) {
           <button
             className="showList btn"
             onClick={async () => {
-              setUploaded(false);
+              setUploaded1(false);
               await getResponse("s3list").then((data) => {
                 setJsonResponse(JSON.stringify(data, null, 4));
               });
-              setUploaded(true);
+              setUploaded1(true);
             }}
           >
             Show Artifacts in S3
@@ -441,7 +496,7 @@ function App({ setUserAuthorized }) {
             <button className="upload btn" onClick={handle_upload_to_mender}>
               Upload to Mender
             </button>
-            {!uploaded && <div className="loader-line"></div>}
+            {!uploaded1 && <div className="loader-line"></div>}
           </div>
 
           <input
@@ -451,6 +506,87 @@ function App({ setUserAuthorized }) {
             value={menderFileName}
             onChange={handle_file_name_change}
           />
+        </div>
+        <div className="sec sec5">
+          <div className="holder">
+            <div className="artList">
+              {artList && artList[0] && (
+                <ReactSelect
+                  opts={artList}
+                  def={{
+                    value: artList[0],
+                    label: artList[0],
+                    color: "var(--text3)",
+                  }}
+                  handleChange={(e) => {
+                    setDeployArt(e.value);
+                  }}
+                  them={1}
+                  vw={13}
+                />
+              )}
+            </div>
+
+            <button
+              className="showFileDetails btn"
+              onClick={() => {
+                setShowArtDetails(!showArtDetails);
+              }}
+            >
+              <img height="25px" src={refreshIcon} alt="" />
+            </button>
+          </div>
+          <div className="holder">
+            <div className="groupList">
+              {groupList && groupList[0] && (
+                <ReactSelect
+                  opts={groupList}
+                  def={{
+                    value: groupList[0],
+                    label: groupList[0],
+                    color: "var(--text3)",
+                  }}
+                  handleChange={(e) => {
+                    setDeployGrp(e.value);
+                  }}
+                  them={1}
+                  vw={13}
+                />
+              )}
+            </div>
+            {groupList && (
+              <button
+                className="showFileDetails btn devicesInGroup"
+                onClick={async () => {
+                  setUploaded2(false);
+
+                  await getResponse("10", "&group=" + deployGrp).then(
+                    (data) => {
+                      setJsonResponse(JSON.stringify(data, null, 4));
+                    }
+                  );
+                  setUploaded2(true);
+                }}
+              >
+                Show
+              </button>
+            )}
+          </div>
+          <input
+            className="textInput"
+            type="text"
+            placeholder="Enter Deployment name"
+            value={deployName}
+            onChange={(e) => {
+              setDeployName(e.target.value);
+            }}
+          />
+          <div className="">
+            <button className="deploy btn" onClick={handle_deploy_to_mender}>
+              Deploy
+            </button>
+            {!uploaded2 && <div className="loader-line"></div>}
+          </div>
         </div>
       </div>
     </div>

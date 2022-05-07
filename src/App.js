@@ -478,7 +478,7 @@ function App({ setUserAuthorized }) {
               <p>Size: {selectedFile.size} bytes</p>
               <p>
                 Last Modified:{" "}
-                {selectedFile.lastModifiedDate.toLocaleDateString()}
+                {new Date(selectedFile.lastModified).toLocaleDateString()}
               </p>
             </div>
           )}

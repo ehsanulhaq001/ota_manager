@@ -344,18 +344,17 @@ function App({ setUserAuthorized }) {
     <div className="App dark">
       <header className="App-header">
         <span className="title">OTA MANAGER</span>
-        <span
-          className="userEmailHolder"
-          // data-logout="Logout"
-          onClick={() => {
-            localStorage.clear();
-            setUserAuthorized(false);
-          }}
-        >
+        <span className="userEmailHolder">
           <span className="userEmail">
             {getDataFromJWT(localStorage.getItem("accessToken:ehsan")).email}
           </span>
-          <span className="logout">
+          <span
+            className="logout"
+            onClick={() => {
+              localStorage.clear();
+              setUserAuthorized(false);
+            }}
+          >
             Logout
             {/* <img src={loginLogo}></img> */}
           </span>

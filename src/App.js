@@ -421,18 +421,7 @@ function App({ setUserAuthorized }) {
           </div>
           {!loaded && <div className="loader-line"></div>}
         </div>
-        <div className="sec sec3">
-          {responseDuration !== "" && (
-            <div className="response duration">
-              took <span>{responseDuration}</span> ms
-            </div>
-          )}
-          {responseTime !== "" && (
-            <div className="response time">{responseTime}</div>
-          )}
 
-          <pre>{jsonResponse}</pre>
-        </div>
         <div className="sec sec4">
           <button
             className="showList btn"
@@ -446,6 +435,19 @@ function App({ setUserAuthorized }) {
           >
             Show Artifacts in S3
           </button>
+
+          <button className="upload s3 btn" onClick={handle_upload_to_s3}>
+            Upload to S3
+          </button>
+
+          <button
+            className="upload mender btn"
+            onClick={handle_upload_to_mender}
+          >
+            Upload to Mender
+          </button>
+          {!uploaded1 && <div className="loader-line"></div>}
+
           <div className="holder">
             <button
               className="selectArt btn"
@@ -463,43 +465,23 @@ function App({ setUserAuthorized }) {
                 {showFileDetails ? <span>&#9650;</span> : <span>&#9660;</span>}
               </button>
             )}
-          </div>
-
-          <input
-            ref={inputRef}
-            type="file"
-            name="file"
-            onChange={changeHandler}
-            style={{ display: "none" }}
-          />
-          {isFilePicked && showFileDetails && (
-            <div className="fileDetails">
-              <p>Filename: {selectedFile.name}</p>
-              <p>Size: {selectedFile.size} bytes</p>
-              <p>
-                Last Modified:{" "}
-                {new Date(selectedFile.lastModified).toLocaleDateString()}
-              </p>
-            </div>
-          )}
-
-          <div className="holder">
-            <button className="upload btn" onClick={handle_upload_to_s3}>
-              Upload{" "}
-              {/* <span
-                style={{
-                  color: "var(--text1)",
-                }}
-              >
-                {selectedFile ? selectedFile?.name : " "}
-              </span>{" "} */}
-              to S3
-            </button>
-
-            <button className="upload btn" onClick={handle_upload_to_mender}>
-              Upload to Mender
-            </button>
-            {!uploaded1 && <div className="loader-line"></div>}
+            <input
+              ref={inputRef}
+              type="file"
+              name="file"
+              onChange={changeHandler}
+              style={{ display: "none" }}
+            />
+            {isFilePicked && showFileDetails && (
+              <div className="fileDetails">
+                <p>Filename: {selectedFile.name}</p>
+                <p>Size: {selectedFile.size} bytes</p>
+                <p>
+                  Last Modified:{" "}
+                  {new Date(selectedFile.lastModified).toLocaleDateString()}
+                </p>
+              </div>
+            )}
           </div>
 
           <input
@@ -590,6 +572,18 @@ function App({ setUserAuthorized }) {
             </button>
             {!uploaded2 && <div className="loader-line"></div>}
           </div>
+        </div>
+        <div className="sec sec3">
+          {responseDuration !== "" && (
+            <div className="response duration">
+              took <span>{responseDuration}</span> ms
+            </div>
+          )}
+          {responseTime !== "" && (
+            <div className="response time">{responseTime}</div>
+          )}
+
+          <pre>{jsonResponse}</pre>
         </div>
       </div>
     </div>

@@ -52,7 +52,7 @@ const ReactSelect = ({ opts, def, handleChange, them, vw }) => {
     }),
     group: (provided) => ({
       ...provided,
-      backgroundColor: them ? "#0c111a" : "white",
+      backgroundColor: them ? "#2a303c" : "white",
     }),
     container: (provided) => ({
       ...provided,
@@ -88,7 +88,7 @@ const ReactSelect = ({ opts, def, handleChange, them, vw }) => {
         borderRadius: vw * 0.3,
         colors: {
           ...theme.colors,
-          neutral0: "#ffffff00",
+          neutral0: "#2a303c",
           // neutral10: 'red',
           neutral20: "#ffffff00", // border
           // neutral30: 'red', // border hover
